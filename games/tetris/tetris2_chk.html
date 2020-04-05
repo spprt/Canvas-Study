@@ -1,0 +1,133 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <title>Tetris Test</title>
+    <style></style>
+  </head>
+  <body>
+    <!-- <div class="start"><span id="start">Game Start</span></div> -->
+    <canvas id="canvas" height="800" width="600"></canvas>
+    <script>
+      var init = false;
+      var canvas;
+      var ctx;
+      var sizeX = 20;
+      var sizeY = 10;
+      /* block box arr 20X10 */
+      var blockbox = [];
+      var blockboxSize = 25;
+      var blockboxTop = 50;
+      var blockboxLeft = 280;
+
+      /* block type arr */
+      var blockType = [];
+      var blockTypeNumber = 1;
+      var blockTypeX = 3;
+      var blockTypeY = 0;
+
+      function initBlockBox() {
+        for (var i = 0; i < sizeX; i++) {
+          if (!blockbox[i]) {
+            blockbox[i] = [];
+          }
+          for (var j = 0; j < sizeY; j++) {
+            blockbox[i][j] = 0;
+          }
+        }
+      }
+      console.log(blockbox);
+
+      function initBlockType() {
+        var arr = new Array();
+        arr.push(0, 0);
+        arr.push(0, 1);
+        arr.push(0, 2);
+        arr.push(0, 3);
+        console.log(arr);
+        blockType.push(arr);
+
+        arr = new Array();
+
+        arr.push(0, 0);
+        arr.push(0, 1);
+        arr.push(0, 2);
+        arr.push(1, 1);
+        blockType.push(arr);
+
+        arr = new Array();
+
+        arr.push(0, 0);
+        arr.push(0, 1);
+        arr.push(1, 1);
+        arr.push(1, 2);
+        blockType.push(arr);
+
+        arr = new Array();
+
+        arr.push(0, 1);
+        arr.push(0, 2);
+        arr.push(1, 0);
+        arr.push(1, 1);
+        blockType.push(arr);
+
+        arr = new Array();
+
+        arr.push(0, 0);
+        arr.push(0, 1);
+        arr.push(1, 0);
+        arr.push(1, 1);
+        blockType.push(arr);
+      }
+
+      function initGame() {
+        if (init == false) {
+          canvas = document.getElementById("canvas");
+          ctx = canvas.getContext("2d");
+          initBlockBox();
+          initBlockType();
+          init = true;
+        }
+      }
+      function onDraw() {
+        if (init == false) return;
+        ctx.strokeStyle = "#000";
+        ctx.lineWidth = 1;
+        ctx.strokeRect(0, 0, canvas.width - 1, canvas.height - 1);
+
+        console.log(blockbox);
+
+        for (var i = 0; i < sizeX; ++i) {
+          for (var j = 0; j < sizeY; ++j) {
+            if (blockbox[i][j] == 0) {
+              ctx.fillStyle = "#ccc";
+            } else {
+              ctx.fillStyle = "green";
+            }
+            var size = blockType[blockTypeNumber].length;
+            for (var k = 0; k < size; k += 2) {
+              if (
+                blockTypeY + blockType[blockTypeNumber][k] == i &&
+                blockTypeX + blockType[blockTypeNumber][k + 1] == j
+              ) {
+                console.log(i, j);
+                ctx.fillStyle = "blue";
+              }
+            }
+          }
+          x = blockboxLeft + j * blockboxSize;
+          y = blockboxTop + i * blockboxSize;
+          console.log(x, y);
+          ctx.fillRect(x, y, blockboxSize - 2, blockboxSize - 2);
+        }
+      }
+      function run() {
+        blockTypeY++;
+        onDraw();
+      }
+
+      initGame();
+      run();
+    </script>
+  </body>
+</html>

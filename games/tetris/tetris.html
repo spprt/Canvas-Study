@@ -1,0 +1,301 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <title>Tetris Test</title>
+    <style></style>
+  </head>
+  <body>
+    <!-- <div class="start"><span id="start">Game Start</span></div> -->
+    <canvas id="canvas" width="800" height="600"></canvas>
+    <script>
+      var init = false;
+      var canvas;
+      var ctx;
+      var sizeX = 20;
+      var sizeY = 10;
+      var gameMode = 1;
+      const MODE_GAME = 1;
+      const MODE_GAMEOVER = 2;
+
+      /* block box arr */
+      var blockbox = [];
+      var blockboxSize = 25;
+      var blockboxTop = 50;
+      var blockboxLeft = 280;
+
+      /* block type arr */
+      var blockType = [];
+      var blockTypeX = 3;
+      var blockTypeY = 0;
+      var blockTypeNumber;
+      var currBlock;
+
+      var runEvent;
+      var runEventTime = 500;
+      var level = 1;
+      var exp = 0;
+      var sum = 0;
+      var score = 0;
+
+      function initBlockType() {
+        var arr = [];
+        arr.push(0, 0);
+        arr.push(0, 1);
+        arr.push(0, 2);
+        arr.push(0, 3);
+        // blockType.push(arr);
+        blockType.push({ arr: arr, color: "#e5c650" });
+
+        arr = [];
+        arr.push(0, 0);
+        arr.push(0, 1);
+        arr.push(0, 2);
+        arr.push(1, 1);
+        // blockType.push(arr);
+        blockType.push({ arr: arr, color: "#9018ff" });
+
+        arr = [];
+        arr.push(0, 0);
+        arr.push(0, 1);
+        arr.push(1, 1);
+        arr.push(1, 2);
+        // blockType.push(arr);
+        blockType.push({ arr: arr, color: "#3977cd" });
+
+        arr = [];
+        arr.push(0, 1);
+        arr.push(0, 2);
+        arr.push(1, 0);
+        arr.push(1, 1);
+        // blockType.push(arr);
+        blockType.push({ arr: arr, color: "#67935c" });
+
+        arr = [];
+        arr.push(0, 0);
+        arr.push(0, 1);
+        arr.push(1, 0);
+        arr.push(1, 1);
+        // blockType.push(arr);
+        blockType.push({ arr: arr, color: "#ff6d18" });
+
+        arr = [];
+        arr.push(0, 0);
+        arr.push(0, 1);
+        arr.push(0, 2);
+        arr.push(1, 0);
+        // blockType.push(arr);
+        blockType.push({ arr: arr, color: "#e5506d" });
+
+        arr = [];
+        arr.push(0, 0);
+        arr.push(0, 1);
+        arr.push(0, 2);
+        arr.push(1, 2);
+        // blockType.push(arr);
+        blockType.push({ arr: arr, color: "#18be96" });
+      }
+
+      function initBlockBox() {
+        for (var i = 0; i < sizeX; i++) {
+          if (!blockbox[i]) {
+            blockbox[i] = [];
+          }
+          for (var j = 0; j < sizeY; j++) {
+            blockbox[i][j] = { fill: 0, color: "#ccc" };
+          }
+        }
+      }
+      function initGame() {
+        if (init == false) {
+          canvas = document.getElementById("canvas");
+          ctx = canvas.getContext("2d");
+          initBlockBox();
+          initBlockType();
+          init = true;
+          blockTypeNumber = Math.floor(Math.random() * 6.9);
+          currBlock = blockType[blockTypeNumber];
+        }
+      }
+      function onDraw() {
+        if (init == false) return;
+        ctx.strokeStyle = "#000";
+        ctx.lineWidth = 1;
+        ctx.strokeRect(0, 0, canvas.width - 1, canvas.height - 1);
+
+        for (var i = 0; i < sizeX; i++) {
+          for (var j = 0; j < sizeY; j++) {
+            if (blockbox[i][j].fill == 0) {
+              ctx.fillStyle = "#ccc";
+            } else {
+              //ctx.fillStyle = "green";
+              ctx.fillStyle = blockbox[i][j].color;
+            }
+
+            // console.log(currBlock);
+            var size = currBlock.arr.length;
+
+            for (var k = 0; k < size; k += 2) {
+              if (
+                blockTypeY + currBlock.arr[k] == i &&
+                blockTypeX + currBlock.arr[k + 1] == j
+              ) {
+                ctx.fillStyle = currBlock.color;
+              }
+            }
+            var x = blockboxLeft + j * blockboxSize;
+            var y = blockboxTop + i * blockboxSize;
+            ctx.fillRect(x, y, blockboxSize - 2, blockboxSize - 2);
+          }
+        }
+        // 점수표시
+        ctx.font = "30px 나눔고딕";
+        ctx.fillStyle = "#eee";
+        ctx.fillRect(10, 60, 250, 40);
+        ctx.fillRect(10, 120, 250, 40);
+        ctx.fillStyle = "blue";
+        ctx.fillText("Score " + score, 50, 90);
+        ctx.fillText("Level " + level, 50, 150);
+        if (gameMode == MODE_GAMEOVER) {
+          alert("GAMEOVER");
+        }
+      }
+
+      function checkConflict() {
+        // var size = blockType[blockTypeNumber].length;
+        var size = currBlock.arr.length;
+        for (var k = 0; k < size; k += 2) {
+          var chkY = blockTypeY + currBlock.arr[k];
+          var chkX = blockTypeX + currBlock.arr[k + 1];
+
+          if (
+            chkX < 0 ||
+            chkX >= 10 ||
+            chkY >= 20 ||
+            (blockbox[chkY] && blockbox[chkY][chkX] && blockbox[chkY][chkX].fill != 0)
+          ) {
+            return true;
+          }
+        }
+        return false;
+      }
+
+      function run() {
+        if (checkConflict()) {
+          gameMode = MODE_GAMEOVER;
+        }
+        if (gameMode == MODE_GAME) {
+          var size = currBlock.arr.length;
+          blockTypeY++;
+
+          if (checkConflict()) {
+            blockTypeY--;
+            for (var k = 0; k < size; k += 2) {
+              var chkY = blockTypeY + currBlock.arr[k];
+              var chkX = blockTypeX + currBlock.arr[k + 1];
+              blockbox[chkY][chkX].fill = 1;
+              blockbox[chkY][chkX].color = currBlock.color;
+            }
+
+            for (var i = 0; i < sizeX; i++) {
+              sum = 0;
+              for (var j = 0; j < sizeY; j++) {
+                if (blockbox[i][j].fill != 0) sum++;
+              }
+              if (sum == sizeY) {
+                for (var k = i; k > 0; k--) {
+                  for (var j = 0; j < sizeY; j++) {
+                    blockbox[k][j] = blockbox[k - 1][j];
+                  }
+                }
+                score += 10;
+                exp++;
+                if (exp >= 10) {
+                  level++;
+                  exp = 0;
+                  runEventTime -= 50;
+                  clearInterval(runEvent);
+                  runEvent = setInterval(run, runEventTime);
+                }
+              }
+            }
+
+            blockTypeY = 0;
+            blockTypeX = 3;
+            blockTypeNumber = Math.floor(Math.random() * 6.9);
+            currBlock = blockType[blockTypeNumber];
+          }
+        }
+        onDraw();
+      }
+
+      function onKeyEvent(keycode) {
+        if (gameMode == MODE_GAME) {
+          if (keycode == 37) {
+            blockTypeX--;
+            if (checkConflict()) blockTypeX++;
+            else onDraw();
+          } else if (keycode == 38) {
+            rotateBlock();
+            onDraw();
+          } else if (keycode == 39) {
+            blockTypeX++;
+            if (checkConflict()) blockTypeX--;
+            else onDraw();
+          } else if (keycode == 40) {
+            blockTypeY++;
+            if (checkConflict()) blockTypeY--;
+            else onDraw();
+          } else if (keycode == 32) {
+            console.log("space bar");
+          }
+        } else if (gameMode == MODE_GAMEOVER) {
+          if (keycode == 13) {
+            initBlockBox();
+            blockTypeNumber = Math.floor(Math.random() * 6.9);
+            currBlock = blockType[blockTypeNumber];
+
+            score = 0;
+            gameMode = MODE_GAME;
+          }
+        }
+      }
+
+      function rotateBlock() {
+        var centerX;
+        var centerY;
+        switch (blockTypeNumber) {
+          case 0:
+          case 1:
+          case 2:
+          case 3:
+          case 5:
+          case 6:
+            centerY = 0;
+            centerX = 1;
+            break;
+          case 4:
+            return;
+        }
+        var saveBlock = currBlock;
+        for (var i = 0; i < currBlock.arr.length; i += 2) {
+          var y = currBlock.arr[i + 1] - centerX;
+          var x = -(currBlock.arr[i] - centerY);
+          currBlock.arr[i] = y + centerY;
+          currBlock.arr[i + 1] = x + centerX;
+        }
+        if (checkConflict()) {
+          currBlock = saveBlock;
+        }
+      }
+
+      document.onkeydown = function (evt) {
+        onKeyEvent(evt.keyCode);
+      };
+
+      initGame();
+      var interval = setInterval(run, 500);
+      var runEvent = setInterval(run, runEventTime);
+    </script>
+  </body>
+</html>
