@@ -1,0 +1,224 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <title>Canvas Test</title>
+    <style>
+      * {
+        margin: 0;
+        padding: 0;
+      }
+      html {
+        height: 100%;
+      }
+      body {
+        background: -webkit-linear-gradient(top, #7fc5c9, #deabbe);
+        text-align: center;
+      }
+      .score {
+        font-family: verdana;
+        font-size: 2em;
+        position: relative;
+        color: #fff;
+        padding: 60px 0 0 0;
+      }
+      .start {
+        font-family: verdana;
+        font-size: 7em;
+        position: relative;
+        color: #fff;
+        margin: 25% 0;
+      }
+      canvas {
+        display: block;
+        position: absolute;
+        margin: auto;
+        top: 0;
+        bottom: 0;
+        right: 0;
+        left: 0;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="start"><span id="start">Game Start</span></div>
+    <div class="score" id="score"></div>
+    <canvas id="canvas" height="500" width="500"></canvas>
+    <script>
+      var canvas = document.getElementById("canvas");
+      var ctx = canvas.getContext("2d");
+      var scoreDiv = document.getElementById("score");
+      var startBtn = document.getElementById("start");
+      var direction = "";
+      var directionQueue = "";
+      var fps = 70;
+      var snake = [];
+      var snakeLength = 5;
+      var cellSize = 20;
+      var snakeColor = "#3498db";
+      var foodColor = "#ff3636";
+      var foodX = [];
+      var foodY = [];
+      var food = { x: 0, y: 0 };
+      var score = 0;
+
+      for (i = 0; i <= canvas.width - cellSize; i += cellSize) {
+        foodX.push(i);
+        foodY.push(i);
+      }
+
+      canvas.setAttribute("tabindex", 1);
+      canvas.style.outline = "none";
+      canvas.focus();
+
+      function drawSquare(x, y, color) {
+        ctx.fillStyle = color;
+        ctx.fillRect(x, y, cellSize, cellSize);
+      }
+
+      function createFood() {
+        food.x = foodX[Math.floor(Math.random() * foodX.length)];
+        food.y = foodY[Math.floor(Math.random() * foodY.length)];
+        for (i = 0; i < snake.length; i++) {
+          if (checkCollision(food.x, food.y, snake[i].x, snake[i].y)) {
+            createFood();
+          }
+        }
+      }
+
+      function drawFood() {
+        drawSquare(food.x, food.y, foodColor);
+      }
+
+      function setBackground(color1, color2) {
+        ctx.fillStyle = color1;
+        ctx.strokeStyle = color2;
+        ctx.fillRect(0, 0, canvas.height, canvas.width);
+        for (var x = 0.5; x < canvas.width; x += cellSize) {
+          ctx.moveTo(x, 0);
+          ctx.lineTo(x, canvas.height);
+        }
+        for (var y = 0.5; y < canvas.height; y += cellSize) {
+          ctx.moveTo(0, y);
+          ctx.lineTo(canvas.width, y);
+        }
+        ctx.stroke();
+      }
+
+      function createSnake() {
+        snake = [];
+        for (var i = snakeLength; i > 0; i--) {
+          k = i * cellSize;
+          snake.push({ x: k, y: 0 });
+        }
+      }
+      function drawSnake() {
+        for (i = 0; i < snake.length; i++) {
+          drawSquare(snake[i].x, snake[i].y, snakeColor);
+        }
+      }
+
+      function changeDirection(keycode) {
+        if (keycode == 37 && direction != "right") {
+          directionQueue = "left";
+        } else if (keycode == 38 && direction != "down") {
+          directionQueue = "up";
+        } else if (keycode == 39 && direction != "left") {
+          directionQueue = "right";
+        } else if (keycode == 40 && direction != "top") {
+          directionQueue = "down";
+        }
+      }
+
+      function moveSnake() {
+        var x = snake[0].x;
+        var y = snake[0].y;
+        direction = directionQueue;
+        if (direction == "right") {
+          x += cellSize;
+        } else if (direction == "left") {
+          x -= cellSize;
+        } else if (direction == "up") {
+          y -= cellSize;
+        } else if (direction == "down") {
+          y += cellSize;
+        }
+        var tail = snake.pop();
+        tail.x = x;
+        tail.y = y;
+        snake.unshift(tail); // 새로운 요소를 배열의 맨 앞쪽에 추가하고, 새로운 길이 반환
+      }
+
+      function checkCollision(x1, y1, x2, y2) {
+        if (x1 == x2 && y1 == y2) {
+          return true;
+        } else {
+          return false;
+        }
+      }
+
+      function game() {
+        var head = snake[0];
+        if (
+          head.x < 0 ||
+          head.x > canvas.width - cellSize ||
+          head.y < 0 ||
+          head.y > canvas.height - cellSize
+        ) {
+          alert("GAME OVER!");
+          document.location.reload();
+          clearInterval(loop);
+        }
+
+        for (i = 1; i < snake.length; i++) {
+          if (head.x == snake[i].x && head.y == snake[i].y) {
+            createSnake();
+            drawSnake();
+            createFood();
+            drawFood();
+            dircetionQueue = "right";
+            score = 0;
+          }
+        }
+
+        if (checkCollision(head.x, head.y, food.x, food.y)) {
+          snake[snake.length] = { x: head.x, y: head.y };
+          createFood();
+          drawFood();
+          score += 10;
+        }
+
+        document.onkeydown = function (evt) {
+          evt = evt || window.event;
+          changeDirection(evt.keyCode);
+        };
+
+        ctx.beginPath();
+        setBackground("#fff", "#eee");
+        scoreDiv.innerHTML = "SCORE : " +score;
+        drawSnake();
+        drawFood();
+        moveSnake();
+      }
+
+      function newGame() {
+        direction = "right";
+        directionQueue = "right";
+        ctx.beginPath();
+        createSnake();
+        createFood();
+        startBtn.parentElement.remove();
+
+        if (typeof loop != "undefined") {
+          clearInterval(loop);
+        } else {
+          loop = setInterval(game, fps);
+        }
+      }
+
+      startBtn.onclick = function () {
+        newGame();
+      };
+    </script>
+  </body>
+</html>
